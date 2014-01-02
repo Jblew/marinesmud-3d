@@ -8,12 +8,15 @@ public class GUILoginPanel : MonoBehaviour
 	public AlternativMUDClient alternativeMUDClientScript;
 	public bool loginFailed;
 	public bool loginSucceeded;
+	public bool finished = false;
 	public string correctLogin = "";
 	public string correctPassword = "";
 	public string selectedCharacter = "";
 
+	private delegate void ExecuteInUpdate();
 	private string login = "";
 	private string password = "";
+	private Queue<ExecuteInUpdate> executeInUpdate = new Queue<ExecuteInUpdate>();
 
 	void Awake ()
 	{
@@ -75,5 +78,17 @@ public class GUILoginPanel : MonoBehaviour
 		var characters = JSON.Parse(jsonData);
 		selectedCharacter = characters ["characters"] [0] ["name"];
 		Debug.Log ("Selected character: "+selectedCharacter);
+		finished = true;
+		executeInUpdate.Enqueue (StartMultiplayer);
+	}
+
+	private void StartMultiplayer() {
+		this.enabled = false;
+	}
+
+	public void Update() {
+		if (executeInUpdate.Count != 0) {
+			executeInUpdate.Dequeue()();
+		}
 	}
 }
