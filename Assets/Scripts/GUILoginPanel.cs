@@ -23,6 +23,7 @@ public class GUILoginPanel : MonoBehaviour
 		alternativeMUDClientScript.AddListener (AlternativeMUDClasses.MSG_LOGIN_SUCCEEDED, OnLoginSucceeded);
 		alternativeMUDClientScript.AddListener (AlternativeMUDClasses.MSG_LOGIN_FAILED, OnLoginFailed);
 		alternativeMUDClientScript.AddListener (AlternativeMUDClasses.MSG_AUTH_CHARACTERS, OnCharactersList);
+		alternativeMUDClientScript.AddListener (AlternativeMUDClasses.MSG_AUTH_UNITY3D_MODE_ENTER_FAILED, Unity3DModeEnterFailed);
 	}
 
 	void OnGUI ()
@@ -78,12 +79,20 @@ public class GUILoginPanel : MonoBehaviour
 		var characters = JSON.Parse(jsonData);
 		selectedCharacter = characters ["characters"] [0] ["name"];
 		Debug.Log ("Selected character: "+selectedCharacter);
+
 		finished = true;
 		executeInUpdate.Enqueue (StartMultiplayer);
 	}
 
+	public void Unity3DModeEnterFailed(string jsonData) {
+		Debug.Log ("Server: Unity3D mode enter failed: "+jsonData);
+	}
+
 	private void StartMultiplayer() {
-		this.enabled = false;
+		Debug.Log ("Sending CMD_AUTH_ENTER_UNITY3D_MODE");
+		alternativeMUDClientScript.SendMessage(AlternativeMUDClasses.CMD_AUTH_ENTER_UNITY3D_MODE, 
+		                                       "{\"sceneName\":\""+Application.loadedLevelName+"\",\"characterName\":\""+selectedCharacter+"\"}");
+
 	}
 
 	public void Update() {

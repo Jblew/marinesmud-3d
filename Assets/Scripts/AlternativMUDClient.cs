@@ -22,6 +22,10 @@ public class AlternativeMUDClasses {
 	public static string MSG_AUTH_GAMEPLAY_START_FAILED = "net.alternativmud.system.nebus.server.AuthenticatedBusSubscriber$GameplayStartFailed";
 	public static string CMD_AUTH_GET_TIME_MACHINE = "net.alternativmud.system.nebus.server.AuthenticatedBusSubscriber$GetTimeMachine";
 	public static string MSG_AUTH_TIME_MACHINE = "net.alternativmud.logic.time.TimeMachine";
+	public static string CMD_AUTH_ENTER_UNITY3D_MODE = "net.alternativmud.system.nebus.server.AuthenticatedBusSubscriber$EnterUnity3DMode";
+	public static string MSG_AUTH_UNITY3D_MODE_ENTER_FAILED = "net.alternativmud.system.nebus.server.AuthenticatedBusSubscriber$Unity3DModeEnterFailed";
+
+	public static string MSG_U3DM_SCENE_ENTER_SUCCEEDED = "net.alternativmud.system.unityserver.Unity3DModeSubscriber$SceneEnterSucceeded";
 }
 
 class ConnectionMaintainer {
@@ -59,10 +63,17 @@ class ConnectionMaintainer {
 		int length = 4 + classNameBytes.Length + jsonBytes.Length;
 
 		byte [] output = new byte[length+4];
-		Buffer.BlockCopy(BitConverter.GetBytes((Int32)SwapEndianness(length)), 0, output, 0, 4);
-		Buffer.BlockCopy(BitConverter.GetBytes((Int32)SwapEndianness(classNameBytes.Length)), 0, output, 4, 4);
-		Buffer.BlockCopy(classNameBytes, 0, output, 8, classNameBytes.Length);
-		Buffer.BlockCopy(jsonBytes, 0, output, 8+classNameBytes.Length, jsonBytes.Length);
+		if (BitConverter.IsLittleEndian) {
+			Buffer.BlockCopy (BitConverter.GetBytes ((Int32)SwapEndianness (length)), 0, output, 0, 4);
+			Buffer.BlockCopy (BitConverter.GetBytes ((Int32)SwapEndianness (classNameBytes.Length)), 0, output, 4, 4);
+			Buffer.BlockCopy (classNameBytes, 0, output, 8, classNameBytes.Length);
+			Buffer.BlockCopy (jsonBytes, 0, output, 8 + classNameBytes.Length, jsonBytes.Length);
+		} else {
+			Buffer.BlockCopy (BitConverter.GetBytes ((Int32)length), 0, output, 0, 4);
+			Buffer.BlockCopy (BitConverter.GetBytes ((Int32)classNameBytes.Length), 0, output, 4, 4);
+			Buffer.BlockCopy (classNameBytes, 0, output, 8, classNameBytes.Length);
+			Buffer.BlockCopy (jsonBytes, 0, output, 8 + classNameBytes.Length, jsonBytes.Length);
+		}
 
 		return output;
 	}
@@ -90,7 +101,7 @@ class ConnectionMaintainer {
 					if(s.DataAvailable) {
 						byte [] lengthBytes = {(byte)s.ReadByte(), (byte)s.ReadByte(), (byte)s.ReadByte(), (byte)s.ReadByte()};
 
-						int length = SwapEndianness(BitConverter.ToInt32(lengthBytes, 0));
+						int length = (BitConverter.IsLittleEndian? SwapEndianness(BitConverter.ToInt32(lengthBytes, 0)) : BitConverter.ToInt32(lengthBytes, 0));
 						//Debug.Log ("leftToRead="+leftToRead);
 
 						byte [] data = new byte[length];
@@ -98,7 +109,7 @@ class ConnectionMaintainer {
 						int readBytes = s.Read(data, 0, length);
 						if(readBytes != length) Debug.Log ("Read incomplete message (readBytes["+readBytes+"] != leftToRead["+length+"])");
 
-						int classNameLength = SwapEndianness(BitConverter.ToInt32(data, dataOffset));//4 = length of this field
+						int classNameLength = (BitConverter.IsLittleEndian? SwapEndianness(BitConverter.ToInt32(data, dataOffset)) : BitConverter.ToInt32(data, dataOffset));//4 = length of this field
 						dataOffset += 4;
 
 						string className = utfEncoding.GetString(data, dataOffset, classNameLength);
@@ -160,7 +171,7 @@ class ConnectionMaintainer {
 		else if(className == AlternativeMUDClasses.MSG_AUTH_TIME_MACHINE) {
 		}
 		else {
-			Debug.Log ("Unknown type of AlternativMUD message: "+className);
+			//Debug.Log ("Unknown type of AlternativMUD message: "+className);
 		}
 
 	}
@@ -183,15 +194,13 @@ public class AlternativMUDClient : MonoBehaviour {
 	public AudioClip connectionFailedSound;
 	public TextMesh statusTextMesh;
 	public InfoTextFX infoTextFx;
-	public GUILoginPanel guiLoginPanelScript;
 
+	private GUILoginPanel guiLoginPanelScript;
 	private bool connected = false;
 	private bool connectionFailed = false;
-
 	private bool authDataCorrect = false;
 	private string login;
 	private string password;
-
 	private bool failure;
 
 	private static ConnectionMaintainer connectionMaintainer = null;
@@ -199,6 +208,8 @@ public class AlternativMUDClient : MonoBehaviour {
 	// Use this for initialization
 	void Start () {
 		DontDestroyOnLoad (gameObject);
+
+		guiLoginPanelScript = GetComponent<GUILoginPanel> ();
 
 		if (connectionMaintainer == null) {
 			connectionMaintainer = new ConnectionMaintainer(hostname, port);
