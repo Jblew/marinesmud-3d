@@ -199,8 +199,7 @@ public class AlternativMUDClient : MonoBehaviour {
 	public int port;
 	public AudioClip connectionEstabilishedSound;
 	public AudioClip connectionFailedSound;
-	public TextMesh statusTextMesh;
-	public InfoTextFX infoTextFx;
+	public GUIBigLabelFader infoTextFader;
 
 	private GUILoginPanel guiLoginPanelScript;
 	private bool connected = false;
@@ -231,8 +230,8 @@ public class AlternativMUDClient : MonoBehaviour {
 	void Update() {
 		if (!connected && connectionMaintainer.connected) {
 			AudioSource.PlayClipAtPoint(connectionEstabilishedSound, Camera.main.transform.position);
-			statusTextMesh.text = "Connected";
-			infoTextFx.fxOn = false;
+			infoTextFader.Show("Connected");
+			infoTextFader.Hide();
 
 			if(!authDataCorrect) {
 				guiLoginPanelScript.enabled = true;
@@ -240,8 +239,7 @@ public class AlternativMUDClient : MonoBehaviour {
 		}
 		if (!connectionFailed && connectionMaintainer.connectionFailed) {
 			AudioSource.PlayClipAtPoint(connectionFailedSound, Camera.main.transform.position);
-			statusTextMesh.text = "Connection failed";
-			infoTextFx.fxOn = true;
+			infoTextFader.Show("Connection failed");
 		}
 		connected = connectionMaintainer.connected;
 		connectionFailed = connectionMaintainer.connectionFailed;
