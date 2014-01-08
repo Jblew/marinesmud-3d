@@ -30,8 +30,8 @@ public class GUIBigLabelFader : MonoBehaviour {
 		}
 	}
 
-	public void Show(string text) {
-		text = text;
+	public void Show(string text_) {
+		text = text_;
 		showLabel = true;
 	}
 
