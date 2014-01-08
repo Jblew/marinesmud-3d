@@ -10,7 +10,6 @@ public class AlternativMUDUDPClient : MonoBehaviour {
 	public GameObject enemyPrefab;
 	public float packetsPerSecond;
 	public GameObject player;
-	public GameObject serverPositionMarker;
 	public int sentPackets;
 	public int receivedPackets;
 
@@ -44,10 +43,15 @@ public class AlternativMUDUDPClient : MonoBehaviour {
 		myID = (byte)N ["characterID"].AsInt;
 
 		//Debug.Log (N["enemies"]);
+		enemies.Clear ();
 		foreach(string key in N["enemies"].AsObject.Keys) {
-			Debug.Log ("Found enemy");
-			byte characterID = (byte)enemy["characterID"].AsInt;
-			enemies.Add(characterID, Instantiate(enemyPrefab, Vector3.zero, Quaternion.identity) as GameObject);
+			JSONNode enemy = N["enemies"][key];
+			Debug.Log ("Found enemy "+key+":"+enemy);
+			byte characterID = (byte) int.Parse(key);
+			executeInUpdate.Enqueue(delegate() {
+				if(characterID != myID) enemies.Add(characterID, Instantiate(enemyPrefab, Vector3.zero, Quaternion.identity) as GameObject);
+			});
+
 		}
 
 		if (udpClient != null) {
@@ -67,13 +71,21 @@ public class AlternativMUDUDPClient : MonoBehaviour {
 	void EnemyArrived (string jsonData) {
 		var N = JSON.Parse (jsonData);
 		byte characterID = (byte)N["characterID"].AsInt;
-		enemies.Add(characterID, Instantiate(enemyPrefab, Vector3.zero, Quaternion.identity) as GameObject);
+		executeInUpdate.Enqueue(delegate() {
+			if(characterID != myID) enemies.Add(characterID, Instantiate(enemyPrefab, Vector3.zero, Quaternion.identity) as GameObject);
+		});
 	}
 
 	void EnemyLeft(string jsonData) {
 		var N = JSON.Parse (jsonData);
 		byte characterID = (byte)N["characterID"].AsInt;
-		if(enemies.ContainsKey(characterID)) enemies.Remove(characterID);
+		executeInUpdate.Enqueue(delegate() {
+			if(enemies.ContainsKey(characterID)) {
+				GameObject enemy = enemies[characterID];
+				Destroy (enemy);
+				enemies.Remove(characterID);
+			}
+		});
 	}
 	
 	void Update () {
