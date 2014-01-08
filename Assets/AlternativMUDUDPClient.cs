@@ -7,6 +7,7 @@ using System;
 using System.Net;
 
 public class AlternativMUDUDPClient : MonoBehaviour {
+	public GameObject enemyPrefab;
 	public float packetsPerSecond;
 	public GameObject player;
 	public GameObject serverPositionMarker;
@@ -16,10 +17,11 @@ public class AlternativMUDUDPClient : MonoBehaviour {
 	private AlternativMUDClient alternativMUDClientScript;
 	private delegate void ExecuteInUpdate();
 	private Queue<ExecuteInUpdate> executeInUpdate = new Queue<ExecuteInUpdate>();
+	private Dictionary<Byte, GameObject> enemies = new Dictionary<Byte, GameObject>();
 	private float minPacketInterval;
 	private float packetTimer = 0f;
 	private UdpClient udpClient = null;
-	private byte characterID = 0;
+	private byte myID = 0;
 	
 	void Start () {
 		minPacketInterval = 1f / packetsPerSecond;
@@ -28,6 +30,8 @@ public class AlternativMUDUDPClient : MonoBehaviour {
 
 		alternativMUDClientScript = GetComponent<AlternativMUDClient> ();
 		alternativMUDClientScript.AddListener (AlternativeMUDClasses.MSG_U3DM_SCENE_ENTER_SUCCEEDED, SceneEnterSuccess);
+		alternativMUDClientScript.AddListener (AlternativeMUDClasses.MSG_U3DM_ENEMY_LEFT, EnemyLeft);
+		alternativMUDClientScript.AddListener (AlternativeMUDClasses.MSG_U3DM_ENEMY_ARRIVED, EnemyArrived);
 		Debug.Log ("Added listener on MSG_U3DM_SCENE_ENTER_SUCCEEDED");
 	}
 
@@ -37,7 +41,14 @@ public class AlternativMUDUDPClient : MonoBehaviour {
 		executeInUpdate.Enqueue (SceneEnterSuccessSync);
 
 		var N = JSON.Parse (jsonData);
-		characterID = (byte)N ["characterID"].AsInt;
+		myID = (byte)N ["characterID"].AsInt;
+
+		//Debug.Log (N["enemies"]);
+		foreach(string key in N["enemies"].AsObject.Keys) {
+			Debug.Log ("Found enemy");
+			byte characterID = (byte)enemy["characterID"].AsInt;
+			enemies.Add(characterID, Instantiate(enemyPrefab, Vector3.zero, Quaternion.identity) as GameObject);
+		}
 
 		if (udpClient != null) {
 			udpClient.Close();
@@ -52,13 +63,25 @@ public class AlternativMUDUDPClient : MonoBehaviour {
 			loginPanel.enabled = false;
 		}
 	}
+
+	void EnemyArrived (string jsonData) {
+		var N = JSON.Parse (jsonData);
+		byte characterID = (byte)N["characterID"].AsInt;
+		enemies.Add(characterID, Instantiate(enemyPrefab, Vector3.zero, Quaternion.identity) as GameObject);
+	}
+
+	void EnemyLeft(string jsonData) {
+		var N = JSON.Parse (jsonData);
+		byte characterID = (byte)N["characterID"].AsInt;
+		if(enemies.ContainsKey(characterID)) enemies.Remove(characterID);
+	}
 	
 	void Update () {
 		packetTimer += Time.deltaTime;
 		if (packetTimer > minPacketInterval) {
 			if(udpClient != null) {
 				byte [] sendBytes = new byte[25];
-				sendBytes[0] = characterID;
+				sendBytes[0] = myID;
 				if(BitConverter.IsLittleEndian) {
 					byte [] dataArr = BitConverter.GetBytes ((Single)player.transform.position.x);
 					Array.Reverse(dataArr);
@@ -106,16 +129,29 @@ public class AlternativMUDUDPClient : MonoBehaviour {
 				int offset = 0;
 				while(receiveBytes.Length-offset >= 25) {
 					byte rCharacterID = receiveBytes[offset]; offset+=1;
-					float posX = ReadSingleBigEndian(receiveBytes, offset); offset+=4;
-					float posY = ReadSingleBigEndian(receiveBytes, offset); offset+=4;
-					float posZ = ReadSingleBigEndian(receiveBytes, offset); offset+=4;
-					float rotX = ReadSingleBigEndian(receiveBytes, offset); offset+=4;
-					float rotY = ReadSingleBigEndian(receiveBytes, offset); offset+=4;
-					float rotZ = ReadSingleBigEndian(receiveBytes, offset); offset+=4;
-					serverPositionMarker.transform.position = new Vector3(posX, posY, posZ);
-					serverPositionMarker.transform.eulerAngles = new Vector3(rotX, rotY, rotZ);
+					if(rCharacterID != 0 && rCharacterID != myID) {
+						float posX = ReadSingleBigEndian(receiveBytes, offset); offset+=4;
+						float posY = ReadSingleBigEndian(receiveBytes, offset); offset+=4;
+						float posZ = ReadSingleBigEndian(receiveBytes, offset); offset+=4;
+						float rotX = ReadSingleBigEndian(receiveBytes, offset); offset+=4;
+						float rotY = ReadSingleBigEndian(receiveBytes, offset); offset+=4;
+						float rotZ = ReadSingleBigEndian(receiveBytes, offset); offset+=4;
+						//serverPositionMarker.transform.position = new Vector3(posX, posY, posZ);
+						//serverPositionMarker.transform.eulerAngles = new Vector3(rotX, rotY, rotZ);
+						if(enemies.ContainsKey(rCharacterID)) {
+							GameObject enemy = enemies[rCharacterID];
+							enemy.transform.position = new Vector3(posX, posY, posZ);
+							enemy.transform.eulerAngles = new Vector3(rotX, rotY, rotZ);
+						}
+						/*else {
+							Quaternion rotation = Quaternion.identity;
+							rotation.eulerAngles = new Vector3(rotX, rotY, rotZ);
+							enemies.Add(rCharacterID, Instantiate(enemyPrefab, new Vector3(posX, posY, posZ), rotation) as GameObject);
+						}*/
+					}
+					else offset += 24;
 				}
-				receivedPackets++;
+				receivedPackets++;	
 				//serverPositionMarker.transform.position
 			}
 		}

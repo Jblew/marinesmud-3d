@@ -15,7 +15,6 @@ public class TrainController : MonoBehaviour {
 	private Vector3 lowPosition;
 	private Vector3 highPosition;
 	private Vector3 zeroPosition;
-	private int state = 3;//0 = arriving, 1 = staying, 2 = leaving, 3 = waiting
 
 	void Start () {
 		timer = awayTime;

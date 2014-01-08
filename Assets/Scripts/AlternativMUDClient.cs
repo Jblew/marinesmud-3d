@@ -26,6 +26,13 @@ public class AlternativeMUDClasses {
 	public static string MSG_AUTH_UNITY3D_MODE_ENTER_FAILED = "net.alternativmud.system.nebus.server.AuthenticatedBusSubscriber$Unity3DModeEnterFailed";
 
 	public static string MSG_U3DM_SCENE_ENTER_SUCCEEDED = "net.alternativmud.system.unityserver.Unity3DModeSubscriber$SceneEnterSucceeded";
+	public static string MSG_U3DM_SCENE_ENTER_FAILED = "net.alternativmud.system.unityserver.Unity3DModeSubscriber$SceneEnterFailed";
+	public static string CMD_U3DM_DESCRIBE_CHARACTER = "net.alternativmud.system.unityserver.Unity3DModeSubscriber$DescribeCharacter";
+	public static string MSG_U3DM_ENEMY_ARRIVED = "net.alternativmud.system.unityserver.Unity3DModeSubscriber$EnemyArrived";
+	public static string MSG_U3DM_ENEMY_LEFT = "net.alternativmud.system.unityserver.Unity3DModeSubscriber$EnemyLeft";
+	public static string MSG_U3DM_CHARACTER_DESCRIPTION = "net.alternativmud.system.unityserver.Unity3DModeSubscriber$CharacterDescription";
+	public static string MSG_U3DM_COULD_NOT_DESCRIBE_CHARACTER = "net.alternativmud.system.unityserver.Unity3DModeSubscriber$CouldNotDescribeCharacter";
+	public static string CMD_U3DM_CHANGE_SCENE = "net.alternativmud.system.unityserver.Unity3DModeSubscriber$ChangeScene";
 }
 
 class ConnectionMaintainer {
