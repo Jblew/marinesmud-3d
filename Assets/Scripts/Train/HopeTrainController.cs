@@ -11,5 +11,6 @@ public class HopeTrainController : MonoBehaviour {
 	// Update is called once per frame
 	void Update () {
 		transform.Translate (new Vector3(0f, 0f, 10f*Time.deltaTime));
+		//rigidbody.AddForce (new Vector3(1f, 1f, 100000f*Time.deltaTime));
 	}
 }
