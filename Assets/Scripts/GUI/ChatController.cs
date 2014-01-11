@@ -2,7 +2,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-
+using SimpleJSON;
 
 //by Alex Aza: http://stackoverflow.com/questions/5923552/c-sharp-collection-with-automatic-item-removal
 public class FixedSizedQueue<T> : Queue<T>
@@ -31,6 +31,7 @@ public class ChatController : MonoBehaviour {
 	public GUISkin guiSkin;
 	public int maxNumOfLines = 5;
 
+	private AlternativMUDClient alternativMUDClient = null;
 	private FixedSizedQueue<string> messages;
 	private int msgWidth;
 	private bool typingMode = false;
@@ -47,7 +48,15 @@ public class ChatController : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-
+		if (alternativMUDClient == null) {
+			GameObject alternativMUDClientObject = GameObject.FindWithTag ("AlternativMUDClient");
+			if (alternativMUDClientObject != null) {
+				alternativMUDClient = alternativMUDClientObject.GetComponent<AlternativMUDClient> ();
+				alternativMUDClient.AddListener (AlternativeMUDClasses.MSG_U3DM_CHAT_MESSAGE, OnChatMessage);
+			} else {
+				Debug.LogWarning ("PlayerMovement: Cannot find by tag: #AlternativMUDClient");
+			}
+		}
 	}
 
 	void OnGUI() {
@@ -71,8 +80,9 @@ public class ChatController : MonoBehaviour {
 			if (Event.current.type == EventType.KeyDown && (Event.current.keyCode == KeyCode.Return)) {
 				typingMode = false;
 				if(message.Length > 0) {
-					//Debug.Log ();
-					messages.Enqueue("[me] "+message);
+					//Debug.Log ("Sending msg");
+					//messages.Enqueue("[me] "+message);
+					alternativMUDClient.SendMessage(AlternativeMUDClasses.CMD_U3DM_POST_CHAT_MESSAGE, "{\"message\":\""+message+"\"}");
 				}
 				message = "";
 			}
@@ -93,5 +103,11 @@ public class ChatController : MonoBehaviour {
 
 	public void AddMessage(string msg) {
 		messages.Enqueue (msg);
+	}
+
+	void OnChatMessage(string jsonData) {
+
+		var N = JSON.Parse (jsonData);
+		messages.Enqueue (N["character"]["name"]+": "+N["message"]);
 	}
 }

@@ -33,6 +33,8 @@ public class AlternativeMUDClasses {
 	public static string MSG_U3DM_CHARACTER_DESCRIPTION = "net.alternativmud.system.unityserver.Unity3DModeSubscriber$CharacterDescription";
 	public static string MSG_U3DM_COULD_NOT_DESCRIBE_CHARACTER = "net.alternativmud.system.unityserver.Unity3DModeSubscriber$CouldNotDescribeCharacter";
 	public static string CMD_U3DM_CHANGE_SCENE = "net.alternativmud.system.unityserver.Unity3DModeSubscriber$ChangeScene";
+	public static string CMD_U3DM_POST_CHAT_MESSAGE = "net.alternativmud.system.unityserver.Unity3DModeSubscriber$PostChatMessage";
+	public static string MSG_U3DM_CHAT_MESSAGE = "net.alternativmud.system.unityserver.Unity3DModeSubscriber$ChatMessage";
 }
 
 class ConnectionMaintainer {

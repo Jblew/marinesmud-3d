@@ -90,8 +90,6 @@ public class GUILoginPanel : MonoBehaviour
 		selectedCharacter = characters ["characters"] [0] ["name"];
 		Debug.Log ("Selected character: "+selectedCharacter);
 
-		if(chat != null) chat.AddMessage("Logged in as "+correctLogin+", using character: "+selectedCharacter);
-
 		finished = true;
 		executeInUpdate.Enqueue (StartMultiplayer);
 	}
@@ -101,6 +99,8 @@ public class GUILoginPanel : MonoBehaviour
 	}
 
 	private void StartMultiplayer() {
+		if(chat != null) chat.AddMessage("Logged in as "+correctLogin+", using character: "+selectedCharacter);
+
 		Debug.Log ("Sending CMD_AUTH_ENTER_UNITY3D_MODE");
 		alternativeMUDClientScript.SendMessage(AlternativeMUDClasses.CMD_AUTH_ENTER_UNITY3D_MODE, 
 		                                       "{\"sceneName\":\""+Application.loadedLevelName+"\",\"characterName\":\""+selectedCharacter+"\"}");
