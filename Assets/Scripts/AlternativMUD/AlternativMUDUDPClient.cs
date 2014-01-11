@@ -9,10 +9,10 @@ using System.Net;
 public class AlternativMUDUDPClient : MonoBehaviour {
 	public GameObject enemyPrefab;
 	public float packetsPerSecond;
-	public GameObject player;
 	public int sentPackets;
 	public int receivedPackets;
 
+	private GameObject player = null;
 	private AlternativMUDClient alternativMUDClientScript;
 	private delegate void ExecuteInUpdate();
 	private Queue<ExecuteInUpdate> executeInUpdate = new Queue<ExecuteInUpdate>();
@@ -46,7 +46,7 @@ public class AlternativMUDUDPClient : MonoBehaviour {
 		enemies.Clear ();
 		foreach(string key in N["enemies"].AsObject.Keys) {
 			JSONNode enemy = N["enemies"][key];
-			Debug.Log ("Found enemy "+key+":"+enemy);
+			Debug.Log ("Found enemy "+key+":"+enemy.ToString());
 			byte characterID = (byte) int.Parse(key);
 			executeInUpdate.Enqueue(delegate() {
 				if(characterID != myID) enemies.Add(characterID, Instantiate(enemyPrefab, Vector3.zero, Quaternion.identity) as GameObject);
@@ -89,6 +89,10 @@ public class AlternativMUDUDPClient : MonoBehaviour {
 	}
 	
 	void Update () {
+		if (player == null) {
+			player = GameObject.FindGameObjectWithTag ("Player");
+		}
+
 		packetTimer += Time.deltaTime;
 		if (packetTimer > minPacketInterval) {
 			if(udpClient != null) {

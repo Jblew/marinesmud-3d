@@ -3,13 +3,22 @@ using System.Collections;
 
 public class RotateCameraByMouseY : MonoBehaviour {
 	public float mouseTurnSpeed;
-	public GUILoginPanel guiLoginPanelScript;
 
+	private GUILoginPanel guiLoginPanelScript = null;
 	private Vector3 moveRotation;
-	
+
+	void Start() {
+		GameObject alternativMUDClient = GameObject.FindWithTag ("AlternativMUDClient");
+		if (alternativMUDClient != null) {
+			guiLoginPanelScript = alternativMUDClient.GetComponent<GUILoginPanel>();
+		} else {
+			Debug.LogWarning ("RotateCameraByMouseY: Cannot find by tag: #AlternativMUDClient");
+		}
+	}
+
 	// Update is called once per frame
 	void Update () {
 		moveRotation = new Vector3(-Input.GetAxis("Mouse Y"), 0f, 0f);
-		if(!guiLoginPanelScript.enabled) transform.Rotate (moveRotation* mouseTurnSpeed);
+		if(guiLoginPanelScript != null && !guiLoginPanelScript.enabled) transform.Rotate (moveRotation* mouseTurnSpeed);
 	}
 }

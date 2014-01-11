@@ -199,8 +199,8 @@ public class AlternativMUDClient : MonoBehaviour {
 	public int port;
 	public AudioClip connectionEstabilishedSound;
 	public AudioClip connectionFailedSound;
-	public GUIBigLabelFader infoTextFader;
 
+	private GUIBigLabelFader infoTextFader = null;
 	private GUILoginPanel guiLoginPanelScript;
 	private bool connected = false;
 	private bool connectionFailed = false;
@@ -228,10 +228,13 @@ public class AlternativMUDClient : MonoBehaviour {
 	}
 
 	void Update() {
+		if (infoTextFader == null) {
+			infoTextFader = GameObject.FindWithTag ("GUIBigLabel").GetComponent<GUIBigLabelFader>();
+		}
+
 		if (!connected && connectionMaintainer.connected) {
 			AudioSource.PlayClipAtPoint(connectionEstabilishedSound, Camera.main.transform.position);
 			infoTextFader.Show("Connected");
-			infoTextFader.Hide();
 
 			if(!authDataCorrect) {
 				guiLoginPanelScript.enabled = true;
