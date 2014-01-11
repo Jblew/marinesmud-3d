@@ -16,13 +16,8 @@ public class GUIController : MonoBehaviour {
 
 	void Start() {
 		player = GameObject.FindGameObjectWithTag (Tags.PLAYER);
-		UpdateSettings();
 	}
-	
-	void UpdateSettings() {
 
-	}
-	
 	void OnGUI() {
 		if(player != null) {
 			angle = -player.transform.eulerAngles.y;

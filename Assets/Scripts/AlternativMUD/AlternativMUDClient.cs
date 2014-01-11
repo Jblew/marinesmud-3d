@@ -208,6 +208,7 @@ public class AlternativMUDClient : MonoBehaviour {
 	private string login;
 	private string password;
 	private bool failure;
+	private ChatController chat = null;
 
 	private static ConnectionMaintainer connectionMaintainer = null;
 
@@ -216,7 +217,6 @@ public class AlternativMUDClient : MonoBehaviour {
 		DontDestroyOnLoad (gameObject);
 
 		guiLoginPanelScript = GetComponent<GUILoginPanel> ();
-
 		if (connectionMaintainer == null) {
 			connectionMaintainer = new ConnectionMaintainer(hostname, port);
 		}
@@ -232,9 +232,17 @@ public class AlternativMUDClient : MonoBehaviour {
 			infoTextFader = GameObject.FindWithTag ("GUIBigLabel").GetComponent<GUIBigLabelFader>();
 		}
 
+		if (chat == null) {
+			GameObject chatObject = GameObject.FindWithTag("Chat");
+			if(chatObject != null) {
+				chat = chatObject.GetComponent<ChatController>();
+			}
+		}
+
 		if (!connected && connectionMaintainer.connected) {
 			AudioSource.PlayClipAtPoint(connectionEstabilishedSound, Camera.main.transform.position);
 			infoTextFader.Show("Connected");
+			if(chat != null) chat.AddMessage("Connected to alternativ-mud on "+hostname+":"+port);
 
 			if(!authDataCorrect) {
 				guiLoginPanelScript.enabled = true;
@@ -243,6 +251,7 @@ public class AlternativMUDClient : MonoBehaviour {
 		if (!connectionFailed && connectionMaintainer.connectionFailed) {
 			AudioSource.PlayClipAtPoint(connectionFailedSound, Camera.main.transform.position);
 			infoTextFader.Show("Connection failed");
+			if(chat != null) chat.AddMessage("Connection to alternativ-mud failed on "+hostname+":"+port);
 		}
 		connected = connectionMaintainer.connected;
 		connectionFailed = connectionMaintainer.connectionFailed;

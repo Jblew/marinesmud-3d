@@ -17,6 +17,7 @@ public class GUILoginPanel : MonoBehaviour
 	private string login = "";
 	private string password = "";
 	private Queue<ExecuteInUpdate> executeInUpdate = new Queue<ExecuteInUpdate>();
+	private ChatController chat = null;
 
 	void Awake ()
 	{
@@ -24,6 +25,15 @@ public class GUILoginPanel : MonoBehaviour
 		alternativeMUDClientScript.AddListener (AlternativeMUDClasses.MSG_LOGIN_FAILED, OnLoginFailed);
 		alternativeMUDClientScript.AddListener (AlternativeMUDClasses.MSG_AUTH_CHARACTERS, OnCharactersList);
 		alternativeMUDClientScript.AddListener (AlternativeMUDClasses.MSG_AUTH_UNITY3D_MODE_ENTER_FAILED, Unity3DModeEnterFailed);
+	}
+
+	void Start() {
+		if (chat == null) {
+			GameObject chatObject = GameObject.FindWithTag("Chat");
+			if(chatObject != null) {
+				chat = chatObject.GetComponent<ChatController>();
+			}
+		}
 	}
 
 	void OnGUI ()
@@ -80,6 +90,8 @@ public class GUILoginPanel : MonoBehaviour
 		selectedCharacter = characters ["characters"] [0] ["name"];
 		Debug.Log ("Selected character: "+selectedCharacter);
 
+		if(chat != null) chat.AddMessage("Logged in as "+correctLogin+", using character: "+selectedCharacter);
+
 		finished = true;
 		executeInUpdate.Enqueue (StartMultiplayer);
 	}
@@ -96,6 +108,7 @@ public class GUILoginPanel : MonoBehaviour
 	}
 
 	public void Update() {
+
 		if (executeInUpdate.Count != 0) {
 			executeInUpdate.Dequeue()();
 		}
