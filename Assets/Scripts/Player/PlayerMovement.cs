@@ -2,7 +2,7 @@
 using System.Collections;
 
 public class PlayerMovement : MonoBehaviour {
-	[System.Serializable]
+	/*[System.Serializable]
 	public class  Anim {
 		public AnimationClip walk;
 		public AnimationClip stand_Lshot;
@@ -14,31 +14,32 @@ public class PlayerMovement : MonoBehaviour {
 		public AnimationClip hit;
 		public AnimationClip death;
 		public AnimationClip run;
-	}
+	}*/
 	
 	
-	public Anim anim;
-	public Animation  aniBody;
+	//public Anim anim;
+	//public Animation  aniBody;
 
 	public AudioClip shoutingClip;
 	public float turnSmoothing = 15f;
 	public float speedDampTime = 0.1f;
 
-	public float mouseTurnSpeed;
-	public float walkSpeed;
+	public float mouseTurnSpeed = 1f;
+	public float walkSpeed = 5f;
 
 	private GUILoginPanel guiLoginPanelScript = null;
 
 	private Vector3 movementTargetVector = Vector3.zero;
 	private Vector3 moveRotation = Vector3.zero;
+	private Rigidbody myRigidbody = null;
 
-	private HashIDs hash;
-	private AnimationClip currentAnimation;
+	//private HashIDs hash;
+	//private AnimationClip currentAnimation;
 	
 	void Awake()
 	{
-		hash = GameObject.FindGameObjectWithTag (Tags.GAME_CONTROLLER).GetComponent<HashIDs> ();
-		currentAnimation = anim.walk;
+		//hash = GameObject.FindGameObjectWithTag (Tags.GAME_CONTROLLER).GetComponent<HashIDs> ();
+		//currentAnimation = anim.walk;
 	}
 	
 	void FixedUpdate()
@@ -46,7 +47,7 @@ public class PlayerMovement : MonoBehaviour {
 		float h = Input.GetAxis ("Horizontal");
 		float v = Input.GetAxis ("Vertical");
 		bool sneak = Input.GetButton ("Sneak");
-		if(!guiLoginPanelScript.enabled) MovementManagement (h, v, sneak);
+		if(guiLoginPanelScript != null && !guiLoginPanelScript.enabled) MovementManagement (h, v, sneak);
 
 	}
 
@@ -58,28 +59,39 @@ public class PlayerMovement : MonoBehaviour {
 			Debug.LogWarning ("PlayerMovement: Cannot find by tag: #AlternativMUDClient");
 		}
 
-		for(int i = 0;i<4; i++) {
+		/*for(int i = 0;i<4; i++) {
 			aniBody.clip = anim.idle;
 			aniBody.Play ();
-		}
+		}*/
 	}
 	
 	void Update() {
-		aniBody.CrossFade (currentAnimation.name, 0.1f);
+		//aniBody.CrossFade (currentAnimation.name, 0.1f);
 
 		moveRotation = new Vector3(0,Input.GetAxis("Mouse X"),0);
-		if(!guiLoginPanelScript.enabled) transform.Rotate (moveRotation* mouseTurnSpeed);
+		if(guiLoginPanelScript == null) transform.Rotate (moveRotation* mouseTurnSpeed);
+		else if(!guiLoginPanelScript.enabled) transform.Rotate (moveRotation* mouseTurnSpeed);
 	}
 	
 	void MovementManagement(float horizontal, float vertical, bool sneaking) {
-		if (horizontal != 0f || vertical != 0f) {
-			rigidbody.velocity = transform.rotation * Vector3.forward * mouseTurnSpeed * walkSpeed;
-			currentAnimation = anim.walk;
-		}
-		else {
-			rigidbody.velocity = Vector3.zero;
-			currentAnimation = anim.idle;
-			movementTargetVector = Vector3.zero;
+		if (myRigidbody == null) {
+			UMADynamicAvatar avatar = GetComponent<UMADynamicAvatar>();
+			if(avatar == null) {
+				Debug.LogWarning("Object does not contain component UMADynamicAvatar");
+			}
+			else {
+				Debug.Log ("Avatar rigidbody null");
+				myRigidbody = null;
+			}
+		} else {
+			if (horizontal != 0f || vertical != 0f) {
+				myRigidbody.velocity = transform.rotation * Vector3.forward * mouseTurnSpeed * walkSpeed;
+				//currentAnimation = anim.walk;
+			} else {
+				myRigidbody.velocity = Vector3.zero;
+				//currentAnimation = anim.idle;
+				movementTargetVector = Vector3.zero;
+			}
 		}
 	}
 	

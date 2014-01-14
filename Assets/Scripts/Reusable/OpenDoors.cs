@@ -11,18 +11,21 @@ public class OpenDoors : MonoBehaviour {
 	public string failMessage;
 
 	private delegate void ExecuteInUpdate();
-	private GameObject player;
+	private GameObject player = null;
 	private bool changingScene = false;
 	private bool sceneChangeEnabled = false;
 	private Queue<ExecuteInUpdate> executeInUpdate = new Queue<ExecuteInUpdate>();
 
 	void Start() {
-		player = GameObject.FindGameObjectWithTag (Tags.PLAYER);
 		alternativMUDClient.AddListener (AlternativeMUDClasses.MSG_U3DM_SCENE_ENTER_FAILED, SceneEnterFailed);
 		alternativMUDClient.AddListener (AlternativeMUDClasses.MSG_U3DM_SCENE_ENTER_SUCCEEDED, SceneEnterSucceeded);
 	}
 
 	void Update() {
+		if (player == null) {
+			player = GameObject.FindGameObjectWithTag (Tags.PLAYER);	
+		}
+
 		if (sceneChangeEnabled) {
 			labelFader.Show (message, 0.5f);
 
@@ -39,13 +42,13 @@ public class OpenDoors : MonoBehaviour {
 	}
 
 	void OnTriggerEnter(Collider other) {
-		if (other.gameObject == player) {
+		if (player != null && other.gameObject == player) {
 			sceneChangeEnabled = true;
 		}
 	}
 
 	void OnTriggerExit(Collider other) {
-		if (other.gameObject == player) {
+		if (player != null && other.gameObject == player) {
 			changingScene = false;
 			sceneChangeEnabled = false;
 		}

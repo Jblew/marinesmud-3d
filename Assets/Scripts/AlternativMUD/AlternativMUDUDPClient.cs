@@ -12,7 +12,7 @@ public class AlternativMUDUDPClient : MonoBehaviour {
 	public int sentPackets;
 	public int receivedPackets;
 
-	private GameObject player = null;
+	private GameObject playerChildren = null;
 	private AlternativMUDClient alternativMUDClientScript;
 	private delegate void ExecuteInUpdate();
 	private Queue<ExecuteInUpdate> executeInUpdate = new Queue<ExecuteInUpdate>();
@@ -49,7 +49,12 @@ public class AlternativMUDUDPClient : MonoBehaviour {
 			Debug.Log ("Found enemy "+key+":"+enemy.ToString());
 			byte characterID = (byte) int.Parse(key);
 			executeInUpdate.Enqueue(delegate() {
-				if(characterID != myID) enemies.Add(characterID, Instantiate(enemyPrefab, Vector3.zero, Quaternion.identity) as GameObject);
+				//if(characterID != myID) enemies.Add(characterID, Instantiate(enemyPrefab, Vector3.zero, Quaternion.identity) as GameObject);
+				if(characterID != myID) {
+					//enemies.Add(characterID, Instantiate(enemyPrefab, Vector3.zero, Quaternion.identity) as GameObject);
+					UMADynamicAvatar avatar = LoadUMA(enemy["umaPackedRecipe"], null, "Enemy", false);
+					enemies.Add (characterID, avatar.gameObject);
+				}
 			});
 
 		}
@@ -66,13 +71,24 @@ public class AlternativMUDUDPClient : MonoBehaviour {
 		if (loginPanel != null) {
 			loginPanel.enabled = false;
 		}
+
+		if (playerChildren == null) {
+			playerChildren = GameObject.FindWithTag ("PlayerChildren");
+			if(playerChildren == null) Debug.LogError("Could not find #PlayerChildren"); 
+		}
+
+		LoadUMA (loginPanel.selectedCharacter["umaPackedRecipe"], playerChildren.transform, "Player", true);
 	}
 
 	void EnemyArrived (string jsonData) {
 		var N = JSON.Parse (jsonData);
 		byte characterID = (byte)N["characterID"].AsInt;
 		executeInUpdate.Enqueue(delegate() {
-			if(characterID != myID) enemies.Add(characterID, Instantiate(enemyPrefab, Vector3.zero, Quaternion.identity) as GameObject);
+			if(characterID != myID) {
+				//enemies.Add(characterID, Instantiate(enemyPrefab, Vector3.zero, Quaternion.identity) as GameObject);
+				UMADynamicAvatar avatar = LoadUMA(N["character"]["umaPackedRecipe"], null, "Enemy", false);
+				enemies.Add (characterID, avatar.gameObject);
+			}
 		});
 	}
 
@@ -89,8 +105,8 @@ public class AlternativMUDUDPClient : MonoBehaviour {
 	}
 	
 	void Update () {
-		if (player == null) {
-			player = GameObject.FindGameObjectWithTag ("Player");
+		if (playerChildren == null) {
+			playerChildren = GameObject.FindGameObjectWithTag ("PlayerChildren");
 		}
 
 		packetTimer += Time.deltaTime;
@@ -99,39 +115,39 @@ public class AlternativMUDUDPClient : MonoBehaviour {
 				byte [] sendBytes = new byte[25];
 				sendBytes[0] = myID;
 				if(BitConverter.IsLittleEndian) {
-					byte [] dataArr = BitConverter.GetBytes ((Single)player.transform.position.x);
+					byte [] dataArr = BitConverter.GetBytes ((Single)playerChildren.transform.position.x);
 					Array.Reverse(dataArr);
 					Buffer.BlockCopy (dataArr, 0, sendBytes, 1, 4);
 
-					dataArr = BitConverter.GetBytes ((Single)player.transform.position.y);
+					dataArr = BitConverter.GetBytes ((Single)playerChildren.transform.position.y);
 					Array.Reverse(dataArr);
 					Buffer.BlockCopy (dataArr, 0, sendBytes, 5, 4);
 					
-					dataArr = BitConverter.GetBytes ((Single)player.transform.position.z);
+					dataArr = BitConverter.GetBytes ((Single)playerChildren.transform.position.z);
 					Array.Reverse(dataArr);
 					Buffer.BlockCopy (dataArr, 0, sendBytes, 9, 4);
 					
-					dataArr = BitConverter.GetBytes ((Single)player.transform.eulerAngles.x);
+					dataArr = BitConverter.GetBytes ((Single)playerChildren.transform.eulerAngles.x);
 					Array.Reverse(dataArr);
 					Buffer.BlockCopy (dataArr, 0, sendBytes, 13, 4);
 					
-					dataArr = BitConverter.GetBytes ((Single)player.transform.eulerAngles.y);
+					dataArr = BitConverter.GetBytes ((Single)playerChildren.transform.eulerAngles.y);
 					Array.Reverse(dataArr);
 					Buffer.BlockCopy (dataArr, 0, sendBytes, 17, 4);
 					
-					dataArr = BitConverter.GetBytes ((Single)player.transform.eulerAngles.z);
+					dataArr = BitConverter.GetBytes ((Single)playerChildren.transform.eulerAngles.z);
 					Array.Reverse(dataArr);
 					Buffer.BlockCopy (dataArr, 0, sendBytes, 21, 4);
 					
 
 				}
 				else {
-					Buffer.BlockCopy (BitConverter.GetBytes ((Single)player.transform.position.x), 0, sendBytes, 1, 4);
-					Buffer.BlockCopy (BitConverter.GetBytes ((Single)player.transform.position.y), 0, sendBytes, 5, 4);
-					Buffer.BlockCopy (BitConverter.GetBytes ((Single)player.transform.position.z), 0, sendBytes, 9, 4);
-					Buffer.BlockCopy (BitConverter.GetBytes ((Single)player.transform.eulerAngles.x), 0, sendBytes, 13, 4);
-					Buffer.BlockCopy (BitConverter.GetBytes ((Single)player.transform.eulerAngles.y), 0, sendBytes, 17, 4);
-					Buffer.BlockCopy (BitConverter.GetBytes ((Single)player.transform.eulerAngles.z), 0, sendBytes, 21, 4);
+					Buffer.BlockCopy (BitConverter.GetBytes ((Single)playerChildren.transform.position.x), 0, sendBytes, 1, 4);
+					Buffer.BlockCopy (BitConverter.GetBytes ((Single)playerChildren.transform.position.y), 0, sendBytes, 5, 4);
+					Buffer.BlockCopy (BitConverter.GetBytes ((Single)playerChildren.transform.position.z), 0, sendBytes, 9, 4);
+					Buffer.BlockCopy (BitConverter.GetBytes ((Single)playerChildren.transform.eulerAngles.x), 0, sendBytes, 13, 4);
+					Buffer.BlockCopy (BitConverter.GetBytes ((Single)playerChildren.transform.eulerAngles.y), 0, sendBytes, 17, 4);
+					Buffer.BlockCopy (BitConverter.GetBytes ((Single)playerChildren.transform.eulerAngles.z), 0, sendBytes, 21, 4);
 				}
 				udpClient.Send(sendBytes, sendBytes.Length);
 				sentPackets++;
@@ -175,6 +191,25 @@ public class AlternativMUDUDPClient : MonoBehaviour {
 		if (executeInUpdate.Count != 0) {
 			executeInUpdate.Dequeue()();
 		}
+	}
+
+	private UMADynamicAvatar LoadUMA(string jsonPackedRecipe, Transform child, string tag, bool addPlayerMouseMovement) {
+		GameObject umaObjContext = GameObject.FindWithTag ("UMAContext");
+		if (umaObjContext != null) {
+			UMAContext context = umaObjContext.GetComponent<UMAContext>();
+			UMADynamicAvatar avatar = UmaLoad.Load (jsonPackedRecipe, context, transform);
+			avatar.gameObject.transform.position = playerChildren.transform.position;
+			GameObject realPlayerObject = avatar.gameObject.transform.GetChild(0).transform.GetChild(0).gameObject;
+			realPlayerObject.tag = tag;
+			if(child != null) child.parent = realPlayerObject.transform;
+			if(addPlayerMouseMovement) {
+				PlayerMouseMovement playerMouseMovement = realPlayerObject.AddComponent<PlayerMouseMovement>();
+			}
+			return avatar;
+		} else {
+			Debug.LogError ("Cannot find #UMAContext");
+		}
+		return null;
 	}
 
 	public static float ReadSingleBigEndian(byte[] data, int offset)

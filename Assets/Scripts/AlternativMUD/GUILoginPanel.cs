@@ -11,7 +11,7 @@ public class GUILoginPanel : MonoBehaviour
 	public bool finished = false;
 	public string correctLogin = "";
 	public string correctPassword = "";
-	public string selectedCharacter = "";
+	public JSONNode selectedCharacter = null;
 
 	private delegate void ExecuteInUpdate();
 	private string login = "";
@@ -87,8 +87,8 @@ public class GUILoginPanel : MonoBehaviour
 	public void OnCharactersList (string jsonData)
 	{
 		var characters = JSON.Parse(jsonData);
-		selectedCharacter = characters ["characters"] [0] ["name"];
-		Debug.Log ("Selected character: "+selectedCharacter);
+		selectedCharacter = characters ["characters"][0];
+		Debug.Log ("Selected character: "+selectedCharacter["name"]);
 
 		finished = true;
 		executeInUpdate.Enqueue (StartMultiplayer);
@@ -99,11 +99,11 @@ public class GUILoginPanel : MonoBehaviour
 	}
 
 	private void StartMultiplayer() {
-		if(chat != null) chat.AddMessage("Logged in as "+correctLogin+", using character: "+selectedCharacter);
+		if(chat != null) chat.AddMessage("Logged in as "+correctLogin+", using character: "+selectedCharacter["name"]);
 
 		Debug.Log ("Sending CMD_AUTH_ENTER_UNITY3D_MODE");
 		alternativeMUDClientScript.SendMessage(AlternativeMUDClasses.CMD_AUTH_ENTER_UNITY3D_MODE, 
-		                                       "{\"sceneName\":\""+Application.loadedLevelName+"\",\"characterName\":\""+selectedCharacter+"\"}");
+		                                       "{\"sceneName\":\""+Application.loadedLevelName+"\",\"characterName\":\""+selectedCharacter["name"]+"\"}");
 
 	}
 
