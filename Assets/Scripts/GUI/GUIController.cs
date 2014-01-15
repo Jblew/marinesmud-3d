@@ -3,7 +3,7 @@ using System.Collections;
 
 [ExecuteInEditMode()] 
 public class GUIController : MonoBehaviour {
-
+	public GUILoginPanel guiLoginPanel;
 	public Texture2D texture = null;
 	public float angle = 0;
 	public float lastAngle = 0;
@@ -16,6 +16,9 @@ public class GUIController : MonoBehaviour {
 
 	void Start() {
 		player = GameObject.FindGameObjectWithTag (Tags.PLAYER);
+		if (guiLoginPanel == null) {
+			Debug.LogWarning ("GUIController.guiLoginPanel is null");
+		}
 	}
 
 	void OnGUI() {
@@ -32,5 +35,10 @@ public class GUIController : MonoBehaviour {
 			GUI.matrix = matrixBackup;
 		}
 		else player = GameObject.FindGameObjectWithTag (Tags.PLAYER);
+
+		if (guiLoginPanel != null) {
+			transform.FindChild("UsernameText").gameObject.GetComponent<GUIText>().text = guiLoginPanel.correctLogin;
+			transform.FindChild("CharacterNameText").gameObject.GetComponent<GUIText>().text = guiLoginPanel.selectedCharacter["name"];
+		}
 	}
 }
