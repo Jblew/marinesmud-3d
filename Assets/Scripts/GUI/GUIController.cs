@@ -13,6 +13,7 @@ public class GUIController : MonoBehaviour {
 	private Rect rect;
 	private Vector2 pivot;
 	private GameObject player = null;
+	private long i = 0;
 
 	void Start() {
 		player = GameObject.FindGameObjectWithTag (Tags.PLAYER);
@@ -36,9 +37,10 @@ public class GUIController : MonoBehaviour {
 		}
 		else player = GameObject.FindGameObjectWithTag (Tags.PLAYER);
 
-		if (guiLoginPanel != null) {
-			transform.FindChild("UsernameText").gameObject.GetComponent<GUIText>().text = guiLoginPanel.correctLogin;
-			transform.FindChild("CharacterNameText").gameObject.GetComponent<GUIText>().text = guiLoginPanel.selectedCharacter["name"];
+		if (i % 50 == 0 && guiLoginPanel != null) {
+			if(guiLoginPanel.correctLogin != null) transform.FindChild("UsernameText").gameObject.GetComponent<GUIText>().text = guiLoginPanel.correctLogin;
+			if(guiLoginPanel.selectedCharacter != null) transform.FindChild("CharacterNameText").gameObject.GetComponent<GUIText>().text = guiLoginPanel.selectedCharacter["name"];
 		}
+		i++;
 	}
 }
