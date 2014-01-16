@@ -11,6 +11,7 @@ public class AlternativMUDUDPClient : MonoBehaviour {
 	public float packetsPerSecond;
 	public int sentPackets;
 	public int receivedPackets;
+	public bool doneUpdateEnemyPosY;
 
 	private GameObject playerChildren = null;
 	private AlternativMUDClient alternativMUDClientScript;
@@ -53,7 +54,7 @@ public class AlternativMUDUDPClient : MonoBehaviour {
 				if(characterID != myID) {
 					//enemies.Add(characterID, Instantiate(enemyPrefab, Vector3.zero, Quaternion.identity) as GameObject);
 					UMADynamicAvatar avatar = LoadUMA(enemy["umaPackedRecipe"], null, "Enemy", false);
-					enemies.Add (characterID, avatar.gameObject);
+					enemies.Add (characterID, MakeEnemy(avatar));
 				}
 			});
 
@@ -87,7 +88,7 @@ public class AlternativMUDUDPClient : MonoBehaviour {
 			if(characterID != myID) {
 				//enemies.Add(characterID, Instantiate(enemyPrefab, Vector3.zero, Quaternion.identity) as GameObject);
 				UMADynamicAvatar avatar = LoadUMA(N["character"]["umaPackedRecipe"], null, "Enemy", false);
-				enemies.Add (characterID, avatar.gameObject);
+				enemies.Add (characterID, MakeEnemy(avatar));
 			}
 		});
 	}
@@ -172,7 +173,8 @@ public class AlternativMUDUDPClient : MonoBehaviour {
 						//serverPositionMarker.transform.eulerAngles = new Vector3(rotX, rotY, rotZ);
 						if(enemies.ContainsKey(rCharacterID)) {
 							GameObject enemy = enemies[rCharacterID];
-							enemy.transform.position = new Vector3(posX, posY, posZ);
+							if(doneUpdateEnemyPosY) enemy.transform.position = new Vector3(posX, enemy.transform.position.y, posZ);
+							else enemy.transform.position = new Vector3(posX, posY, posZ);
 							enemy.transform.eulerAngles = new Vector3(rotX, rotY, rotZ);
 						}
 						/*else {
@@ -210,6 +212,14 @@ public class AlternativMUDUDPClient : MonoBehaviour {
 			Debug.LogError ("Cannot find #UMAContext");
 		}
 		return null;
+	}
+
+	private GameObject MakeEnemy(UMADynamicAvatar avatar) {
+		GameObject realPlayerObject = avatar.gameObject.transform.GetChild(0).transform.GetChild(0).gameObject;
+		if(realPlayerObject.GetComponent<Locomotion> () != null) realPlayerObject.GetComponent<Locomotion> ().enabled = false;
+		//if (realPlayerObject.GetComponent<CapsuleCollider> () != null) realPlayerObject.GetComponent<CapsuleCollider> ().enabled = false;
+		if (realPlayerObject.rigidbody != null) realPlayerObject.rigidbody.constraints = RigidbodyConstraints.FreezeAll;
+		return realPlayerObject;
 	}
 
 	public static float ReadSingleBigEndian(byte[] data, int offset)
