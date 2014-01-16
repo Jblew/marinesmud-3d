@@ -12,6 +12,7 @@ public class AlternativMUDUDPClient : MonoBehaviour {
 	public int sentPackets;
 	public int receivedPackets;
 	public bool doneUpdateEnemyPosY;
+	public string trialUmaRecipe = "";
 
 	private GameObject playerChildren = null;
 	private AlternativMUDClient alternativMUDClientScript;
@@ -32,7 +33,15 @@ public class AlternativMUDUDPClient : MonoBehaviour {
 		alternativMUDClientScript.AddListener (AlternativeMUDClasses.MSG_U3DM_SCENE_ENTER_SUCCEEDED, SceneEnterSuccess);
 		alternativMUDClientScript.AddListener (AlternativeMUDClasses.MSG_U3DM_ENEMY_LEFT, EnemyLeft);
 		alternativMUDClientScript.AddListener (AlternativeMUDClasses.MSG_U3DM_ENEMY_ARRIVED, EnemyArrived);
-		Debug.Log ("Added listener on MSG_U3DM_SCENE_ENTER_SUCCEEDED");
+		if (playerChildren == null) {
+			playerChildren = GameObject.FindWithTag ("PlayerChildren");
+			if(playerChildren == null) Debug.LogError("Could not find #PlayerChildren"); 
+		}
+
+		if (trialUmaRecipe != null && playerChildren != null && trialUmaRecipe.Length > 0) {
+			UMADynamicAvatar avatar = LoadUMA (trialUmaRecipe, playerChildren.transform, "Player", true);
+			avatar.gameObject.tag = "PlayerContainer";
+		}
 	}
 
 	void SceneEnterSuccess(string jsonData) {
@@ -77,8 +86,9 @@ public class AlternativMUDUDPClient : MonoBehaviour {
 			playerChildren = GameObject.FindWithTag ("PlayerChildren");
 			if(playerChildren == null) Debug.LogError("Could not find #PlayerChildren"); 
 		}
-
-		LoadUMA (loginPanel.selectedCharacter["umaPackedRecipe"], playerChildren.transform, "Player", true);
+		GameObject currentPlayerContainer = GameObject.FindWithTag ("PlayerContainer");
+		if (currentPlayerContainer != null) Destroy (currentPlayerContainer);
+		LoadUMA (loginPanel.selectedCharacter ["umaPackedRecipe"], playerChildren.transform, "Player", true).tag = "PlayerContainer";
 	}
 
 	void EnemyArrived (string jsonData) {
