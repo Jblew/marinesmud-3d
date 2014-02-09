@@ -48,7 +48,7 @@ public class ChatController : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-		if (alternativMUDClient == null) {
+		if (alternativMUDClient == null || alternativMUDClient.dirty) {
 			GameObject alternativMUDClientObject = GameObject.FindWithTag ("AlternativMUDClient");
 			if (alternativMUDClientObject != null) {
 				alternativMUDClient = alternativMUDClientObject.GetComponent<AlternativMUDClient> ();

@@ -35,6 +35,8 @@ public class AlternativeMUDClasses {
 	public static string CMD_U3DM_CHANGE_SCENE = "net.alternativmud.system.unityserver.Unity3DModeSubscriber$ChangeScene";
 	public static string CMD_U3DM_POST_CHAT_MESSAGE = "net.alternativmud.system.unityserver.Unity3DModeSubscriber$PostChatMessage";
 	public static string MSG_U3DM_CHAT_MESSAGE = "net.alternativmud.system.unityserver.Unity3DModeSubscriber$ChatMessage";
+	public static string CMD_U3DM_CHANGE_VARIABLE = "net.alternativmud.system.unityserver.Unity3DModeSubscriber$ChangeVariable";
+	public static string MSG_U3DM_VARIABLE_CHANGED = "net.alternativmud.system.unityserver.Unity3DModeSubscriber$VariableChanged";
 }
 
 class ConnectionMaintainer {
@@ -197,11 +199,11 @@ class ConnectionMaintainer {
 public class AlternativMUDClient : MonoBehaviour {
 	public delegate void OnMessage(string jsonData);
 
+	public bool dirty = false;
 	public string hostname;
 	public int port;
 	public AudioClip connectionEstabilishedSound;
 	public AudioClip connectionFailedSound;
-
 	private GUIBigLabelFader infoTextFader = null;
 	private GUILoginPanel guiLoginPanelScript;
 	private bool connected = false;

@@ -19,23 +19,21 @@ public class OpenDoors : MonoBehaviour {
 	private bool failed = false;
 
 	void Start() {
-		if (alternativMUDClient == null) {
-			alternativMUDClient = GameObject.FindWithTag("AlternativMUDClient").GetComponent<AlternativMUDClient>();
-		}
-
 		if (labelFader == null) {
 			labelFader = GameObject.FindWithTag("GUIBigLabel").GetComponent<GUIBigLabelFader>();
 		}
 		if(labelFader == null) Debug.LogWarning("Could not find #GUIBigLabel");
-
-		if (alternativMUDClient != null) {
-			alternativMUDClient.AddListener (AlternativeMUDClasses.MSG_U3DM_SCENE_ENTER_FAILED, SceneEnterFailed);
-			alternativMUDClient.AddListener (AlternativeMUDClasses.MSG_U3DM_SCENE_ENTER_SUCCEEDED, SceneEnterSucceeded);
-		}
-		else Debug.LogWarning("Could not find #AlternativMUDClient");
 	}
 
 	void Update() {
+		if (alternativMUDClient == null || alternativMUDClient.dirty) {
+			alternativMUDClient = GameObject.FindWithTag ("AlternativMUDClient").GetComponent<AlternativMUDClient> ();
+			if (alternativMUDClient != null) {
+				alternativMUDClient.AddListener (AlternativeMUDClasses.MSG_U3DM_SCENE_ENTER_FAILED, SceneEnterFailed);
+				alternativMUDClient.AddListener (AlternativeMUDClasses.MSG_U3DM_SCENE_ENTER_SUCCEEDED, SceneEnterSucceeded);
+			}
+		}
+
 		if (player == null) {
 			player = GameObject.FindGameObjectWithTag (Tags.PLAYER);	
 		}
