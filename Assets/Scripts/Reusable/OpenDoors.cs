@@ -4,8 +4,6 @@ using System.Collections.Generic;
 using SimpleJSON;
 
 public class OpenDoors : MonoBehaviour {
-	public AlternativMUDClient alternativMUDClient;
-	public GUIBigLabelFader labelFader;
 	public string nextSceneName;
 	public string message;
 	public string failMessage;
@@ -15,10 +13,26 @@ public class OpenDoors : MonoBehaviour {
 	private bool changingScene = false;
 	private bool sceneChangeEnabled = false;
 	private Queue<ExecuteInUpdate> executeInUpdate = new Queue<ExecuteInUpdate>();
+	private AlternativMUDClient alternativMUDClient = null;
+	private GUIBigLabelFader labelFader = null;
+	private string failMsgServer = "unknown reason";
+	private bool failed = false;
 
 	void Start() {
-		alternativMUDClient.AddListener (AlternativeMUDClasses.MSG_U3DM_SCENE_ENTER_FAILED, SceneEnterFailed);
-		alternativMUDClient.AddListener (AlternativeMUDClasses.MSG_U3DM_SCENE_ENTER_SUCCEEDED, SceneEnterSucceeded);
+		if (alternativMUDClient == null) {
+			alternativMUDClient = GameObject.FindWithTag("AlternativMUDClient").GetComponent<AlternativMUDClient>();
+		}
+
+		if (labelFader == null) {
+			labelFader = GameObject.FindWithTag("GUIBigLabel").GetComponent<GUIBigLabelFader>();
+		}
+		if(labelFader == null) Debug.LogWarning("Could not find #GUIBigLabel");
+
+		if (alternativMUDClient != null) {
+			alternativMUDClient.AddListener (AlternativeMUDClasses.MSG_U3DM_SCENE_ENTER_FAILED, SceneEnterFailed);
+			alternativMUDClient.AddListener (AlternativeMUDClasses.MSG_U3DM_SCENE_ENTER_SUCCEEDED, SceneEnterSucceeded);
+		}
+		else Debug.LogWarning("Could not find #AlternativMUDClient");
 	}
 
 	void Update() {
@@ -27,12 +41,17 @@ public class OpenDoors : MonoBehaviour {
 		}
 
 		if (sceneChangeEnabled) {
-			labelFader.Show (message, 0.5f);
+			if(labelFader != null) {
+				if(failed) labelFader.Show (failMessage+" ("+failMsgServer+")");
+				else labelFader.Show (message, 0.5f);
+			}
 
 			if (!changingScene &&  Input.GetButton ("Jump")) {
 				Debug.Log ("Changing scene!");
 				changingScene = true;
-				alternativMUDClient.SendMessage (AlternativeMUDClasses.CMD_U3DM_CHANGE_SCENE, "{\"sceneName\":\"" + nextSceneName + "\"}");
+				if(alternativMUDClient != null) alternativMUDClient.SendMessage (AlternativeMUDClasses.CMD_U3DM_CHANGE_SCENE, "{\"sceneName\":\"" + nextSceneName + "\"}");
+				else Debug.LogWarning("Cannot change scene: alternativMUDClient is null");
+				Debug.Log ("Sent request!");
 			}
 		}
 
@@ -44,6 +63,7 @@ public class OpenDoors : MonoBehaviour {
 	void OnTriggerEnter(Collider other) {
 		if (player != null && other.gameObject == player) {
 			sceneChangeEnabled = true;
+			failed = false;
 		}
 	}
 
@@ -56,8 +76,8 @@ public class OpenDoors : MonoBehaviour {
 
 	void SceneEnterFailed(string jsonData) {
 		var N = JSON.Parse (jsonData);
-		labelFader.Show (failMessage+" ("+N["message"]+")");
-
+		failMsgServer = N ["message"];
+		failed = true;
 	}
 
 	void SceneEnterSucceeded(string jsonData) {
@@ -67,6 +87,7 @@ public class OpenDoors : MonoBehaviour {
 	}
 
 	void ChangeScene() {
+		Debug.Log ("Trying to load level "+nextSceneName);
 		Application.LoadLevel (nextSceneName);
 	}
 }
