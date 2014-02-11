@@ -18,6 +18,7 @@ public class GUILoginPanel : MonoBehaviour
 	private string password = "";
 	private Queue<ExecuteInUpdate> executeInUpdate = new Queue<ExecuteInUpdate>();
 	private ChatController chat = null;
+	private string log;
 
 	void Awake ()
 	{
