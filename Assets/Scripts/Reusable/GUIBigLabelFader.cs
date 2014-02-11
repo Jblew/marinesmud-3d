@@ -15,7 +15,7 @@ public class GUIBigLabelFader : MonoBehaviour {
 	void Update () {
 		if (timer < 0) {
 			showLabel = false;
-			Debug.Log ("!showLabel");
+			//Debug.Log ("!showLabel");
 			timer = 0;
 		} else if(timer > 0) {
 			timer -= Time.deltaTime;

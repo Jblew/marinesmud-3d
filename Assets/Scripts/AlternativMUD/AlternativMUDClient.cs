@@ -50,6 +50,7 @@ class ConnectionMaintainer {
 	private int port;
 	private UTF8Encoding utfEncoding = new UTF8Encoding();
 	private Queue<string []> msgQueue = new Queue<string []>();
+	private BinaryWriter writer = null;
 
 	public ConnectionMaintainer(string _hostname, int _port) {
 		hostname = _hostname;
@@ -89,35 +90,77 @@ class ConnectionMaintainer {
 		return output;
 	}
 
-	public void Run() {
+	public void RunWriter() {
+		/*
+		try {
+			if(msgQueue.Count != 0) {
+				try {
+					string [] msgEntry = msgQueue.Dequeue();
+					Debug.Log ("Dequeued msg entry "+msgEntry[0]+"; json: "+msgEntry[1]);
+					if(msgEntry != null) {
+						byte [] msgToWrite = BuildMessage(msgEntry[0], msgEntry[1]);
+						writer.Write(msgToWrite, 0, msgToWrite.Length);
+						//stream.Flush();
+						Debug.Log ("Written msg entry");
+					}
+				}
+				catch(System.ObjectDisposedException ex) {
+					Debug.Log ("Write: Object disposed exception: "+ex);
+					Thread.Sleep(200);
+				}
+				catch(Exception ex) {
+					Debug.Log ("Write: Exception: "+ex);
+					Thread.Sleep(200);
+				}
+			}
+			else {
+				Thread.Sleep(10);
+				connectionState = (client.Connected);
+			}
+		}
+		catch(System.ObjectDisposedException ex) {
+			Debug.Log ("AlternativMUDClient-Else Object disposed exception: ");
+			Thread.Sleep(200);
+		}
+		catch(Exception ex) {
+			Debug.Log ("AlternativMUDClient-Else: Exception: "+ex);
+			Thread.Sleep(200);
+		}*/
+	}
+	
+	public void RunReader() {
 		running = true;
-
+		
 		while(running) {
 			Debug.Log ("Trying to connect to server on "+hostname+":"+port);
 			TcpClient client = new TcpClient(hostname,port);
 			try{
-				NetworkStream s = client.GetStream();
-				//StreamReader sr = new StreamReader(s);
-				//BinaryWriter sw = new BinaryWriter(s);
+				NetworkStream stream = client.GetStream();
+				BinaryReader reader = new BinaryReader(stream);
+				writer = new BinaryWriter(stream);
 				//sw.AutoFlush = true;
 				Debug.Log ("Got AlternativMUD eBus stream");
 
 				byte [] dataToWrite = BuildMessage(AlternativeMUDClasses.CMD_GET_STATUS, "{}");
 				//Debug.Log ("dataToWrite: "+BitConverter.ToString(dataToWrite).Replace("-", string.Empty));
 
-				s.Write(dataToWrite, 0, dataToWrite.Length);
-				s.Flush();
+				writer.Write(dataToWrite, 0, dataToWrite.Length);
+				//stream.Flush();
+				Debug.Log ("Written request for status");
 
+				int i = 0;
 				while(running){
-					if(s.DataAvailable) {
-						byte [] lengthBytes = {(byte)s.ReadByte(), (byte)s.ReadByte(), (byte)s.ReadByte(), (byte)s.ReadByte()};
+					//if(i % 10 == 0) Debug.Log ("Iteration(%10) "+i);
+					i++;
+					try {
+						byte [] lengthBytes = {(byte)reader.ReadByte(), (byte)reader.ReadByte(), (byte)reader.ReadByte(), (byte)reader.ReadByte()};
 
 						int length = (BitConverter.IsLittleEndian? SwapEndianness(BitConverter.ToInt32(lengthBytes, 0)) : BitConverter.ToInt32(lengthBytes, 0));
-						//Debug.Log ("leftToRead="+leftToRead);
+						Debug.Log ("leftToRead="+length);
 
 						byte [] data = new byte[length];
 						int dataOffset = 0;
-						int readBytes = s.Read(data, 0, length);
+						int readBytes = reader.Read(data, 0, length);
 						if(readBytes != length) Debug.Log ("Read incomplete message (readBytes["+readBytes+"] != leftToRead["+length+"])");
 
 						int classNameLength = (BitConverter.IsLittleEndian? SwapEndianness(BitConverter.ToInt32(data, dataOffset)) : BitConverter.ToInt32(data, dataOffset));//4 = length of this field
@@ -128,24 +171,23 @@ class ConnectionMaintainer {
 
 						processMessage(className, utfEncoding.GetString(data, dataOffset, length - classNameLength - 4));
 					}
-					else if(msgQueue.Count != 0) {
-						string [] msgEntry = msgQueue.Dequeue();
-						//Debug.Log ("Dequeued msg entry "+msgEntry[0]+"; json: "+msgEntry[1]);
-						if(msgEntry != null) {
-							byte [] msgToWrite = BuildMessage(msgEntry[0], msgEntry[1]);
-							s.Write(msgToWrite, 0, msgToWrite.Length);
-							s.Flush();
-							//Debug.Log ("Written msg entry");
-						}
+					catch(System.ObjectDisposedException ex) {
+						Debug.Log ("Read: Object disposed exception: "+ex);
+						Thread.Sleep(200);
 					}
-					else {
-						Thread.Sleep(10);
+					catch(Exception ex) {
+						Debug.Log ("Read: Exception: "+ex);
+						Thread.Sleep(200);
 					}
 					//Thread.Sleep (1000);
 				}
-				s.Close();
+				Debug.Log ("Stream: Close");
+				writer.Close ();
+				reader.Close ();
+				writer = null;
 				connected = false;
 			}finally{
+				Debug.Log ("AlternativMUDClient: Finally: Closing client");
 				client.Close();
 				connected = false;
 			}
@@ -188,11 +230,60 @@ class ConnectionMaintainer {
 	}
 
 	public void SendMessage(string className, string jsonData) {
-		string [] queueEntry = new string[2];
-		queueEntry [0] = className;
-		queueEntry [1] = jsonData;
-		msgQueue.Enqueue (queueEntry);
-		//Debug.Log ("Added "+className+" to msg queue");
+		if (writer != null) {
+			try {
+				if(msgQueue.Count != 0) {
+					try {
+						string [] msgEntry = msgQueue.Dequeue();
+						Debug.Log ("Dequeued msg entry "+msgEntry[0]+"; json: "+msgEntry[1]);
+						if(msgEntry != null) {
+							byte [] msgToWrite = BuildMessage(msgEntry[0], msgEntry[1]);
+							writer.Write(msgToWrite, 0, msgToWrite.Length);
+							//stream.Flush();
+							Debug.Log ("Written msg entry");
+						}
+					}
+					catch(System.ObjectDisposedException ex) {
+						Debug.Log ("Write: Object disposed exception: "+ex);
+						Thread.Sleep(200);
+					}
+					catch(Exception ex) {
+						Debug.Log ("Write: Exception: "+ex);
+						Thread.Sleep(200);
+					}
+				}
+
+				try {
+					byte [] msgToWrite = BuildMessage(className, jsonData);
+					writer.Write(msgToWrite, 0, msgToWrite.Length);
+					//stream.Flush();
+					Debug.Log ("Written msg");
+				}
+				catch(System.ObjectDisposedException ex) {
+					Debug.Log ("Write: Object disposed exception: "+ex);
+					Thread.Sleep(200);
+				}
+				catch(Exception ex) {
+					Debug.Log ("Write: Exception: "+ex);
+					Thread.Sleep(200);
+				}
+			}
+			catch(System.ObjectDisposedException ex) {
+				Debug.Log ("AlternativMUDClient-Else Object disposed exception: ");
+				Thread.Sleep(200);
+			}
+			catch(Exception ex) {
+				Debug.Log ("AlternativMUDClient-Else: Exception: "+ex);
+				Thread.Sleep(200);
+			}
+		}
+		else {
+			string [] queueEntry = new string[2];
+			queueEntry [0] = className;
+			queueEntry [1] = jsonData;
+			msgQueue.Enqueue (queueEntry);
+			//Debug.Log ("Added "+className+" to msg queue");
+		}
 	}
 }
 
@@ -226,7 +317,7 @@ public class AlternativMUDClient : MonoBehaviour {
 		}
 
 		if (connectionMaintainer.running == false) {
-			Thread t = new Thread(new ThreadStart(connectionMaintainer.Run));
+			Thread t = new Thread(new ThreadStart(connectionMaintainer.RunReader));
 			t.Start();
 		}
 	}
