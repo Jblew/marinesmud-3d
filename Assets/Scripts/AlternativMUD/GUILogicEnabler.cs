@@ -6,8 +6,8 @@ public class GUILogicEnabler : MonoBehaviour {
 	
 	void Start () {
 		GameObject alternativMUDClient = GameObject.FindWithTag ("AlternativMUDClient");
-		if(alternativMUDClient == null) {
-			secondaryGameLogic.SetActive(true);
+		if (alternativMUDClient == null) {
+			secondaryGameLogic.SetActive (true);
 		}
 	}
 }
