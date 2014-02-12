@@ -5,11 +5,11 @@ MarinesMUD 3D is an adventure and FPS multiplayer game. It is based on Alternati
 ## Quickstart
 + To start the server please follow the instructions on http://github.com/Jblew/alternativ-mud (needed only if you want multiplayer)
 + To run the game:
-   -The easy way
+   + The easy way
       1. Download the latest version for your operating system from "Releases" tab on this page. (On Windows choose proper architecture: 64bit or 32bit)
       2. Extract the archive (skip this on Mac)
       3. Double click on the icon
-   -The hard way
+   + The hard way
       1. Checkout the project
       2. Open Unity
       3. Select File > Open Project
