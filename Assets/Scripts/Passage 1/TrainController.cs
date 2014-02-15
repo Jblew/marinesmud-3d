@@ -1,63 +1,47 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System;
 
 public class TrainController : MonoBehaviour {
-	public float awayTime = 250;
-	public float stayTime = 50;
+	public int awayTime = 200;
+	public int stayTime = 50;
+	public int leavingTime = 50;
 	public float awayX;
-	public float changeMargin;
 	public float transitionSpeed;
-
-	private float timer;
-	private float timerTarget;
-
+	
 	private Vector3 targetPosition;
-	private Vector3 lowPosition;
-	private Vector3 highPosition;
-	private Vector3 zeroPosition;
+	private Vector3 awayPosition;
+	private Vector3 leavingPosition;
+	private Vector3 stayPosition;
+	public int timer;
 
+	/*Train: LEAVING <-- STAY <-- AWAY*/
 	void Start () {
-		timer = awayTime;
-		lowPosition = new Vector3 (transform.position.x + awayX, transform.position.y, transform.position.z);
-		highPosition = new Vector3 (transform.position.x - awayX, transform.position.y, transform.position.z);
-		zeroPosition = transform.position;
-		targetPosition = highPosition;
-		timerTarget = awayTime;
+		awayPosition = new Vector3 (transform.position.x + awayX, transform.position.y, transform.position.z);
+		leavingPosition = new Vector3 (transform.position.x - awayX, transform.position.y, transform.position.z);
+		stayPosition = transform.position;
+		targetPosition = leavingPosition;
+		transform.position = awayPosition;
 	}
 	
 	// Update is called once per frame
 	void Update () {
-		timer -= Time.deltaTime;
+		int cycleTime = awayTime + stayTime + leavingTime;
+		timer = (int)(((TimeManager.getCurrentTicks () / TimeSpan.TicksPerSecond)-(long)leavingTime) % (long)cycleTime);//add leaving time, because train should leave when timer on display is zero
 
-		transform.position = Vector3.Lerp (transform.position, targetPosition, transitionSpeed * Time.deltaTime);
-		//else transform.position += (targetPosition-zeroPosition)/15 * Time.deltaTime; //Vector3.Lerp (transform.position, targetPosition, transitionSpeed * Time.deltaTime);
-		CheckTargetIntensity ();
-
-		if (timer <= 0) {
-			if(timerTarget == awayTime) {
-				timerTarget = stayTime;
-			}
-			else {
-				timerTarget = awayTime;
-			}
-			timer = timerTarget;
+		Vector3 lastTargetPosition = targetPosition;
+		if (timer < awayTime) {
+			targetPosition = awayPosition;
+		} else if(timer < awayTime + stayTime) {
+			targetPosition = stayPosition;
+		} else {
+			targetPosition = leavingPosition;
 		}
-	}
-
-	void CheckTargetIntensity()
-	{
-		if (Mathf.Abs (Vector3.Distance(targetPosition, transform.position)) < changeMargin) 
-		{
-			if(targetPosition == highPosition && timer <= 0) {
-				transform.position = lowPosition;
-				targetPosition = zeroPosition;
-			}
-			else if(targetPosition == zeroPosition && timer <= 0) {
-				targetPosition = highPosition;
-			}
-			else if(timer <= 0) {
-				targetPosition = zeroPosition;
-			}
+		if (lastTargetPosition == leavingPosition && targetPosition == awayPosition) {
+			transform.position = awayPosition;
+		}
+		else {
+			transform.position = Vector3.Lerp (transform.position, targetPosition, transitionSpeed * Time.deltaTime);
 		}
 	}
 }

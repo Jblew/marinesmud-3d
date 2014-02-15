@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 using System;
 using SimpleJSON;
 
@@ -14,8 +15,10 @@ public class TimeManager : MonoBehaviour {
 	public string dateStr;
 	public string timeCorrectionStr;
 	public string startedAtTimeInGameStr;
+	public delegate void TimeHasChanged(long currentTimeTicks);
 
 	private static readonly DateTime Jan1st1970 = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+	private static List<TimeHasChanged> eventListeners = new List<TimeHasChanged>();
 
 	// Use this for initialization
 	void Start () {
@@ -49,5 +52,9 @@ public class TimeManager : MonoBehaviour {
 
 	public static long getCurrentTicks() {
 		return DateTime.Now.Ticks + timeCorrectionTicks;
+	}
+
+	public static void AddListener(TimeHasChanged eventListener) {
+		eventListeners.Add (eventListener);
 	}
 }
