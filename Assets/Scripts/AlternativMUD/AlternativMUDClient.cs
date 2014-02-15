@@ -175,6 +175,10 @@ class ConnectionMaintainer {
 						Debug.Log ("Read: Object disposed exception: "+ex);
 						Thread.Sleep(200);
 					}
+					catch(System.IO.EndOfStreamException ex) {
+						Debug.Log ("Read: End of stream exception");
+						break;
+					}
 					catch(Exception ex) {
 						Debug.Log ("Read: Exception: "+ex);
 						Thread.Sleep(200);
