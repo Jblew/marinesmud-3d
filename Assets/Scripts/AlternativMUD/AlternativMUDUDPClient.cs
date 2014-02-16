@@ -216,6 +216,7 @@ public class AlternativMUDUDPClient : MonoBehaviour {
 			if(child != null) child.parent = realPlayerObject.transform;
 			if(addPlayerMouseMovement) {
 				PlayerMouseMovement playerMouseMovement = realPlayerObject.AddComponent<PlayerMouseMovement>();
+				playerMouseMovement.desiredRightHandPosition = transform;
 				realPlayerObject.AddComponent<DontDestroyObject>();
 			}
 			return avatar;
