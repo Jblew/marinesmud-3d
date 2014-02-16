@@ -1,6 +1,7 @@
 Marines MUD 3D
 ==============
 MarinesMUD 3D is an adventure and FPS multiplayer game. It is based on AlternativMUD server (separate project on Github), which I have been developing for past few years. As the server was ready for 3D, I have started developing the MarinesMUD 3D which is the client. 
++ MarinesMUD Website: http://marinesmud.jblew.pl/ (Work in progress)
 
 ## Quickstart
 + To start the server please follow the instructions on http://github.com/Jblew/alternativ-mud (needed only if you want multiplayer)
