@@ -45,7 +45,7 @@ public class PlayerMouseMovement : MonoBehaviour {
 		if(head != null && rightArm && rightForearm != null && rightHand != null) {
 			//neck.eulerAngles = new Vector3(0f, 0f, -90f);
 			/***==TOP==**/
-			int distanceFromArmToDesiredPosition = Vector3.Distance(rightArm.position, desiredRightHandPosition.position);
+			float distanceFromArmToDesiredPosition = Vector3.Distance(rightArm.position, desiredRightHandPosition.position);
 			head.localEulerAngles = new Vector3(0f, 0f, 0f);
 		}
 	}
