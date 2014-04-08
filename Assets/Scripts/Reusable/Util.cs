@@ -10,7 +10,7 @@ public class Util : MonoBehaviour {
 		else {
 			for(int i = 0;i < t.childCount;i++) {
 				Transform child = t.GetChild(i);
-				if(child.name == name) return t;
+				if(child.name == name) return child;
 				else {
 					Transform probablyResult = FindChildWithName(child, name);
 					if(probablyResult != null) {
