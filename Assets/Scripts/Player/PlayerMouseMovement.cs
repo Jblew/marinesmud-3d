@@ -16,8 +16,12 @@ public class PlayerMouseMovement : MonoBehaviour {
 	private Transform rightForearm = null;
 	private Transform rightHand = null;
 	private Transform pointer1 = null;
+	private SphereCollider greenCollider = null;
+	private SphereCollider shoulderCollider = null;
+	private SphereCollider armCollider = null;
+	private SphereCollider forearmCollider = null;
 
-	public float shoulderLength = 0f;
+	//public float shoulderLength = 0f;
 	public float armLength = 0f;
 	public float forearmLength = 0f;
 	public string grabStatus = "Unknown";
@@ -38,7 +42,7 @@ public class PlayerMouseMovement : MonoBehaviour {
 		rightForearm = Util.FindChildWithName(transform, "RightForeArm");
 		rightHand = Util.FindChildWithName(transform, "RightHand");
 		if(head != null && rightShoulder != null && rightArm != null && rightForearm != null && rightHand != null) {
-			Debug.Log ("Got UMA rigs");
+			Debug.Log ("Got UMA rigs: rightShoulder="+rightShoulder.name+", rightArm="+rightArm.name+", rightForearm="+rightForearm.name+", rightHand="+rightHand.name);
 		}
 		else {
 			Debug.Log ("Could not get UMA rigs!");
@@ -56,17 +60,45 @@ public class PlayerMouseMovement : MonoBehaviour {
 		if(head != null && rightShoulder != null && rightArm != null && rightForearm != null && rightHand != null) {
 			//neck.eulerAngles = new Vector3(0f, 0f, -90f);
 			/***==TOP==**/
-			shoulderLength = Vector3.Distance(rightShoulder.position, rightArm.position);
+			float shoulderLength = Vector3.Distance(rightShoulder.position, rightArm.position);
 			armLength = Vector3.Distance(rightArm.position, rightForearm.position);
 			forearmLength = Vector3.Distance(rightForearm.position, rightHand.position);
 
-			float grabDistance = Vector3.Distance(rightShoulder.position, desiredRightHandPosition);
-			if(grabDistance > shoulderLength+armLength+forearmLength) {
+			float grabDistance = Vector3.Distance(rightArm.position, desiredRightHandPosition);
+			if(grabDistance > armLength+forearmLength) {
 				grabStatus = "Too far";
 
 			}
 			else {
 				grabStatus = "Distance ok";
+
+			}
+
+			if(shoulderCollider == null) {
+				shoulderCollider = rightShoulder.gameObject.AddComponent<SphereCollider>();
+				shoulderCollider.isTrigger = true;
+			}
+			if(shoulderCollider != null) {
+				//shoulderCollider.center = rightShoulder.position-transform.position;
+				shoulderCollider.radius = shoulderLength;
+			}
+
+			if(armCollider == null) {
+				armCollider = rightArm.gameObject.AddComponent<SphereCollider>();
+				armCollider.isTrigger = true;
+			}
+			if(armCollider != null) {
+				//armCollider.center = rightArm.position-transform.position;
+				armCollider.radius = armLength;
+			}
+
+			if(forearmCollider == null) {
+				forearmCollider = rightForearm.gameObject.AddComponent<SphereCollider>();
+				forearmCollider.isTrigger = true;
+			}
+			if(forearmCollider != null) {
+				//forearmCollider.center = rightForearm.position-transform.position;
+				forearmCollider.radius = forearmLength;
 			}
 
 			//head.localEulerAngles = new Vector3(0f, 0f, 0f);
