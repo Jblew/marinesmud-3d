@@ -14,7 +14,7 @@ public class VariableOrientedLamp : MonoBehaviour {
 		if(i % 10 == 0) {
 			VariablesManager mgr = GameObject.FindWithTag("AlternativMUDClient").GetComponent<VariablesManager>();
 			if(mgr != null) {
-				if(mgr.variables.ContainsKey("global.power") && mgr.variables["global.power"] == "1") {
+				if(mgr.get("global.power", "1").Equals("1")) {
 					GetComponent<Light>().enabled = true;
 				}
 				else {

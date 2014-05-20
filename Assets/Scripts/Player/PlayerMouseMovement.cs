@@ -20,11 +20,14 @@ public class PlayerMouseMovement : MonoBehaviour {
 	private SphereCollider shoulderCollider = null;
 	private SphereCollider armCollider = null;
 	private SphereCollider forearmCollider = null;
+	private BoxCollider bC = null;
 
 	//public float shoulderLength = 0f;
 	public float armLength = 0f;
 	public float forearmLength = 0f;
 	public string grabStatus = "Unknown";
+	public float verticalAngleBetweenArmAndForearm = 0f;
+	public float slider = 0f;
 	
 	void Start () {
 		GameObject alternativMUDClient = GameObject.FindWithTag ("AlternativMUDClient");
@@ -67,16 +70,49 @@ public class PlayerMouseMovement : MonoBehaviour {
 			float grabDistance = Vector3.Distance(rightArm.position, desiredRightHandPosition);
 			if(grabDistance > armLength+forearmLength) {
 				grabStatus = "Too far";
-
+				if(greenCollider != null) {
+					greenCollider.radius = armLength+forearmLength;
+				}
 			}
 			else {
 				grabStatus = "Distance ok";
+				if(greenCollider != null) {
+					greenCollider.radius = grabDistance;
+				}
 
+				verticalAngleBetweenArmAndForearm = Mathf.Acos(
+					(Mathf.Pow(armLength, 2) + Mathf.Pow(forearmLength, 2) - Mathf.Pow(grabDistance, 2))
+					/ (2f*forearmLength*armLength)
+					);
+				float verticalAngleBetweenShoulderAndArm = Mathf.Atan(
+					(desiredRightHandPosition.y-rightArm.position.y)
+					/ (desiredRightHandPosition.x-rightArm.position.x)
+					) - Mathf.Acos(
+					(Mathf.Pow(armLength, 2)+Mathf.Pow(grabDistance, 2)-Mathf.Pow(forearmLength, 2))
+					/ (2*armLength*grabDistance)
+					);
+				rightForearm.eulerAngles = new Vector3((verticalAngleBetweenArmAndForearm*180f/Mathf.PI)+180f, rightArm.eulerAngles.y ,rightArm.eulerAngles.z);
+				rightArm.eulerAngles = new Vector3(verticalAngleBetweenShoulderAndArm*180f/Mathf.PI, rightArm.eulerAngles.y ,rightArm.eulerAngles.z);
+				//rightArm.eulerAngles = new Vector3(0f, rightArm.eulerAngles.y ,rightArm.eulerAngles.z);
+
+				if(bC == null) {
+					bC = rightArm.gameObject.AddComponent<BoxCollider>();
+					bC.isTrigger = true;
+				}
+
+				if(bC != null) {
+					bC.size = new Vector3((desiredRightHandPosition.y-rightArm.position.y)*2f, 0.05f, (desiredRightHandPosition.x-rightArm.position.x)*2f);
+				}
+			}
+
+			if(greenCollider == null) {
+				greenCollider = rightArm.gameObject.AddComponent<SphereCollider>();
+				greenCollider.isTrigger = true;
 			}
 
 			if(shoulderCollider == null) {
-				shoulderCollider = rightShoulder.gameObject.AddComponent<SphereCollider>();
-				shoulderCollider.isTrigger = true;
+				//shoulderCollider = rightShoulder.gameObject.AddComponent<SphereCollider>();
+				//shoulderCollider.isTrigger = true;
 			}
 			if(shoulderCollider != null) {
 				//shoulderCollider.center = rightShoulder.position-transform.position;
@@ -84,8 +120,8 @@ public class PlayerMouseMovement : MonoBehaviour {
 			}
 
 			if(armCollider == null) {
-				armCollider = rightArm.gameObject.AddComponent<SphereCollider>();
-				armCollider.isTrigger = true;
+				//armCollider = rightArm.gameObject.AddComponent<SphereCollider>();
+				//armCollider.isTrigger = true;
 			}
 			if(armCollider != null) {
 				//armCollider.center = rightArm.position-transform.position;
@@ -93,8 +129,8 @@ public class PlayerMouseMovement : MonoBehaviour {
 			}
 
 			if(forearmCollider == null) {
-				forearmCollider = rightForearm.gameObject.AddComponent<SphereCollider>();
-				forearmCollider.isTrigger = true;
+				//forearmCollider = rightForearm.gameObject.AddComponent<SphereCollider>();
+				//forearmCollider.isTrigger = true;
 			}
 			if(forearmCollider != null) {
 				//forearmCollider.center = rightForearm.position-transform.position;

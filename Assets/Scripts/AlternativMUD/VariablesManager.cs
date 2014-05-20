@@ -26,4 +26,10 @@ public class VariablesManager : MonoBehaviour {
 		variables [N ["key"]] = N ["value"];
 	}
 
+	public string get(string key, string defaultValue) {
+		if (variables.ContainsKey (key)) {
+						return variables [key];
+				} else
+						return defaultValue;
+	}
 }
